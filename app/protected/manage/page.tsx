@@ -1,5 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { getListings, deleteListing } from "@/app/actions/listings";
+import Link from "next/link";
 
 export default async function ManageListingsPage() {
   const supabase = await createClient();
@@ -10,6 +12,13 @@ export default async function ManageListingsPage() {
 
   if (!user) {
     return redirect("/sign-in");
+  }
+
+  const listings = await getListings();
+
+  async function handleDelete(id: string) {
+    'use server'
+    await deleteListing(id);
   }
 
   return (
@@ -34,37 +43,63 @@ export default async function ManageListingsPage() {
               </tr>
             </thead>
             <tbody>
-              {/* Example listing row */}
-              <tr className="border-b hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded"></div>
-                    <span className="font-medium">Example Listing</span>
-                  </div>
-                </td>
-                <td className="py-3 px-4">$0.00</td>
-                <td className="py-3 px-4">
-                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                    Active
-                  </span>
-                </td>
-                <td className="py-3 px-4">0</td>
-                <td className="py-3 px-4">Just now</td>
-                <td className="py-3 px-4">
-                  <div className="flex justify-end gap-2">
-                    <button className="text-sm text-blue-500 hover:text-blue-600">
-                      Edit
-                    </button>
-                    <button className="text-sm text-red-500 hover:text-red-600">
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              {listings && listings.length > 0 ? (
+                listings.map((listing) => (
+                  <tr key={listing.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-100 rounded"></div>
+                        <span className="font-medium">{listing.title}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">${listing.price.toFixed(2)}</td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                        {listing.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">{listing.views}</td>
+                    <td className="py-3 px-4">
+                      {new Date(listing.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex justify-end gap-2">
+                        <Link
+                          href={`/protected/manage/${listing.id}`}
+                          className="text-sm text-blue-500 hover:text-blue-600"
+                        >
+                          Edit
+                        </Link>
+                        <form action={handleDelete.bind(null, listing.id)}>
+                          <button
+                            type="submit"
+                            className="text-sm text-red-500 hover:text-red-600"
+                          >
+                            Delete
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-gray-500">
+                    You haven't created any listings yet
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-        <p className="text-gray-500 text-center">You haven't created any listings yet</p>
+        {(!listings || listings.length === 0) && (
+          <Link
+            href="/protected/create"
+            className="text-blue-500 hover:text-blue-600 text-center"
+          >
+            Create your first listing
+          </Link>
+        )}
       </div>
     </div>
   );

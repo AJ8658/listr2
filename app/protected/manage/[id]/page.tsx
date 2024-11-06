@@ -1,8 +1,12 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { createListing } from "@/app/actions/listings";
+import { updateListing } from "@/app/actions/listings";
 
-export default async function CreateListingPage() {
+export default async function EditListingPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const supabase = await createClient();
 
   const {
@@ -13,22 +17,34 @@ export default async function CreateListingPage() {
     return redirect("/sign-in");
   }
 
-  async function create(formData: FormData) {
+  // Fetch the listing
+  const { data: listing, error } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("id", params.id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (error || !listing) {
+    return redirect("/protected/manage");
+  }
+
+  async function edit(formData: FormData) {
     'use server'
-    await createListing(formData);
+    await updateListing(params.id, formData);
     redirect('/protected/manage');
   }
 
   return (
     <div className="flex-1 flex flex-col gap-6 px-4 py-8">
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold">Create Listing</h1>
+        <h1 className="text-2xl font-semibold">Edit Listing</h1>
         <p className="text-gray-500">
-          Add a new listing to the marketplace
+          Update your listing information
         </p>
       </div>
       <div className="max-w-2xl">
-        <form action={create} className="grid gap-6">
+        <form action={edit} className="grid gap-6">
           <div className="grid gap-2">
             <label htmlFor="title" className="text-sm font-medium">
               Title
@@ -38,6 +54,7 @@ export default async function CreateListingPage() {
               name="title"
               type="text"
               required
+              defaultValue={listing.title}
               placeholder="Enter listing title"
               className="w-full px-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -52,6 +69,7 @@ export default async function CreateListingPage() {
               name="description"
               rows={4}
               required
+              defaultValue={listing.description}
               placeholder="Describe your listing"
               className="w-full px-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -70,6 +88,7 @@ export default async function CreateListingPage() {
                 min="0"
                 step="0.01"
                 required
+                defaultValue={listing.price}
                 placeholder="0.00"
                 className="w-full pl-8 pr-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -110,12 +129,20 @@ export default async function CreateListingPage() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Create Listing
-          </button>
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Save Changes
+            </button>
+            <a
+              href="/protected/manage"
+              className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center"
+            >
+              Cancel
+            </a>
+          </div>
         </form>
       </div>
     </div>
