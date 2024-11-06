@@ -9,8 +9,17 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Search, Bookmark, PlusCircle, List, Settings } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Search, 
+  Bookmark, 
+  PlusCircle, 
+  List, 
+  Settings, 
+  Table 
+} from "lucide-react";
 
 export default async function ProtectedLayout({
   children,
@@ -28,10 +37,18 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarContent>
-          <SidebarMenu>
+    <div className="flex min-h-screen bg-background">
+      <SidebarProvider>
+        <Sidebar className="border-r" side="left">
+          <SidebarContent>
+            <div className="flex flex-col gap-4 py-4">
+              <div className="px-4 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2">
+                  <span className="font-semibold text-xl">Listr</span>
+                </Link>
+                <SidebarTrigger />
+              </div>
+              <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/protected" className="w-full">
                 <SidebarMenuButton tooltip="Dashboard">
@@ -39,7 +56,7 @@ export default async function ProtectedLayout({
                   <span>Dashboard</span>
                 </SidebarMenuButton>
               </Link>
-            </SidebarMenuItem>
+                </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/protected/search" className="w-full">
                 <SidebarMenuButton tooltip="Search">
@@ -47,7 +64,7 @@ export default async function ProtectedLayout({
                   <span>Search</span>
                 </SidebarMenuButton>
               </Link>
-            </SidebarMenuItem>
+                </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/protected/saved" className="w-full">
                 <SidebarMenuButton tooltip="Saved">
@@ -80,12 +97,12 @@ export default async function ProtectedLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
+              </SidebarMenu>
+            </div>
+          </SidebarContent>
+        </Sidebar>
         {children}
-      </SidebarInset>
-    </SidebarProvider>
+      </SidebarProvider>
+    </div>
   );
 }
